@@ -1,8 +1,8 @@
 Package: EstatRandomEffects
-Title: What the Package Does (One Line, Title Case)
+Title: Tools for Random Effects Modeling in R
 Version: 0.0.0.9000
 Authors@R:
-    person("Estatcamp", "Estatcamp", , "estatistica@estatcamp.com.br", role = c("aut", "cre"),
+    person("Juan Pablo", "Mamani Bustamante", , "juanestaenlinea@hotmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "YOUR-ORCID-ID"))
 Description: What the package does (one paragraph).
 License: file LICENSE
@@ -10,9 +10,9 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Language: en-US
-Config/testthat/edition: 2
-URL: https://github.com/Estatcamp/EstatRandomEffects
-BugReports: https://github.com/Estatcamp/EstatRandomEffects/issues
+Config/testthat/edition: 3
+URL: https://github.com/juanprimate/EstatRandomEffects
+BugReports: https://github.com/juanprimate/EstatRandomEffects/issues
 Suggests:
     assertthat (>= 0.2.1),
     covr (>= 3.5.1),
