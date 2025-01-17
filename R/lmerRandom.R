@@ -106,7 +106,8 @@ lmerRandomFit <- function(dataset,varY,formula,REML) {
 	}
 	#Converte a resposta p/ num\u00E9rico
 	dataset[,varY]  <-  as.numeric(unclass(dataset[,varY]))
-	return(lme4::lmer(formula=formula,data=dataset,REML=REML,na.action=na.omit))
+	
+	return(safe_lmerBroad(formula=formula,data=dataset,REML=REML,na.action=na.omit))
 }
 #' Computing the covariance matrix
 #'
@@ -377,7 +378,7 @@ vcovLmer <- function(fit) suppressWarnings(summary(fit)[['vcov']])
 #'
 	# resp <- output[,-which(names(output) == 'var2')]
 VarCorrLmer <- function(fit) {
-	output <- as.data.frame(VarCorr(fit))
+	output <- as.data.frame(lme4::VarCorr(fit))
 	return(suppressWarnings(output[,-which(names(output) == 'var2')]))
 }
 
@@ -511,3 +512,124 @@ create_formulaTodo <- function(input) {
 #' @export
 #'
 ranefLmer <- function(fit) lme4::ranef(fit)
+#' Perform Safe Restricted Likelihood Ratio Test (RLRT)
+#'
+#' @description
+#' This function performs a series of restricted likelihood ratio tests (RLRTs) 
+#' on linear mixed-effects models fitted to a dataset of resistors. The models 
+#' account for random effects of parts, operators, and their interaction. 
+#' It checks for singular models and computes RLRT statistics for the random effects.
+#'
+#' @param resistors A data frame containing the dataset with at least a column 
+#'   named `mohms` representing measurements and columns representing 
+#'   the random effect grouping factors `part` and `oper`.
+#' @return A numeric vector of RLRT statistics, where the first element is `NA` 
+#'   (reserved for future use), followed by RLRT statistics for parts, operators, 
+#'   and their interaction.
+#' @details
+#' The function uses the `safe_lmer` function to fit mixed-effects models 
+#' and suppresses warnings and messages during the computation of RLRT statistics. 
+#' If any model is singular, a warning is printed to indicate that results may not be valid.
+#'
+#' @importFrom lme4 isSingular
+#' @importFrom RLRsim exactRLRT
+#' @export
+#' @author juanprimate
+#' @examples
+#' # Example usage:
+#' # Assuming `resistors` is a data frame with appropriate columns:
+#' # result <- exactRLRT_safe(resistors)
+#' # print(result)
+exactRLRT_safe <- function(resistors) {
+  
+  mohms.lmer <-safe_lmer(mohms~1 + (1|part) + (1|oper) + (1|part:oper),data=resistors)
+  mohms.partonly.lmer <- safe_lmer(mohms~1 + (1|part),data=resistors)
+  mohms.operonly.lmer <- safe_lmer(mohms~1 + (1|oper),data=resistors)
+  mohms.intronly.lmer <- safe_lmer(mohms~1 + (1|part:oper),data=resistors)
+  mohms.nopart.lmer <-safe_lmer(mohms~1 + (1 | oper) + (1 | part:oper),data=resistors)
+  mohms.nooper.lmer <-safe_lmer(mohms~1 + (1 | part) + (1 | part:oper),data=resistors)
+  mohms.nointr.lmer <-safe_lmer(mohms~1+ (1 | part) + (1 | oper),data=resistors)
+  if (lme4::isSingular(mohms.lmer) || 
+      lme4::isSingular(mohms.partonly.lmer) || 
+      lme4::isSingular(mohms.operonly.lmer) || 
+      lme4::isSingular(mohms.intronly.lmer) || 
+      lme4::isSingular(mohms.nopart.lmer) || 
+      lme4::isSingular(mohms.nooper.lmer) || 
+      lme4::isSingular(mohms.nointr.lmer) ) 
+    print('One or more models are singular. Results may not be valid.')  
+  #fit1<-safe_exactRLRT(mohms.partonly.lmer,mohms.lmer,mohms.nopart.lmer)
+  #fit2<-safe_exactRLRT(mohms.operonly.lmer,mohms.lmer,mohms.nooper.lmer)
+  #fit3<-safe_exactRLRT(mohms.intronly.lmer,mohms.lmer,mohms.nointr.lmer)
+  
+  fit1<-suppressMessages(suppressWarnings(RLRsim::exactRLRT(mohms.partonly.lmer,mohms.lmer,mohms.nopart.lmer)))
+  fit2<-suppressMessages(suppressWarnings(RLRsim::exactRLRT(mohms.operonly.lmer,mohms.lmer,mohms.nooper.lmer)))
+  fit3<-suppressMessages(suppressWarnings(RLRsim::exactRLRT(mohms.intronly.lmer,mohms.lmer,mohms.nointr.lmer)))
+  
+  out<-c(NA,fit1[['statistic']],
+         fit2[['statistic']],
+         fit3[['statistic']])
+  return(out)
+}	
+#' Safe Linear Mixed-Effects Model Fitting
+#'
+#' @description
+#' This function fits a linear mixed-effects model using the `lme4::lmer` function, 
+#' suppressing warnings and messages during the fitting process. It also checks 
+#' for model singularity and displays a message if the model is singular.
+#'
+#' @param formula A formula specifying the fixed and random effects structure of the model.
+#' @param data A data frame containing the variables referenced in the formula.
+#' @return An object of class `merMod` representing the fitted model.
+#' @details
+#' The function uses `lme4::lmer` to fit the model and checks for singularity using 
+#' `lme4::isSingular`. If the model is singular, it prints a warning message. 
+#' Suppressing warnings and messages ensures a cleaner output when fitting the model.
+#'
+#' @importFrom lme4 lmer isSingular
+#' @export
+#' @author juanprimate
+#' @examples
+#' # Example usage:
+#' # Assuming `resistors` is a data frame with appropriate columns:
+#' # model <- safe_lmer(mohms ~ 1 + (1 | part), data = resistors)
+#' # summary(model)
+safe_lmer <- function(formula, data) {
+  model <- suppressMessages(suppressWarnings(
+    lme4::lmer(formula, data = data)
+  ))
+  # Verificar singularidad y mostrar mensaje si es necesario
+  if (lme4::isSingular(model)) {
+    print(c(
+      "Boundary (singular) fit detected: see help('isSingular') for details.",
+      "One or more models are singular. Results may not be valid."))
+  }  
+  return(model)
+}
+#' Ajuste de modelo lineal mixto con verificación de singularidad
+#'
+#' Esta función ajusta un modelo lineal mixto usando `lmer` de lme4, con la opción de manejar valores faltantes y singularidad.
+#' Si se detecta un ajuste singular, se muestra un mensaje de advertencia.
+#'
+#' @param formula Una fórmula en el formato estándar de R para modelos mixtos (por ejemplo, `y ~ x + (1|group)`).
+#' @param data Un `data.frame` que contiene las variables utilizadas en la fórmula.
+#' @param REML Un valor lógico que indica si se debe usar la estimación de máxima verosimilitud restringida. Por defecto, es `TRUE`.
+#' @param na.action Especifica cómo manejar los valores faltantes. Por defecto, es `na.omit` (omitir observaciones con valores faltantes).
+#' 
+#' @return Un objeto de clase `lmerMod` de la función `lmer`, que representa el modelo ajustado.
+#' @details Si el ajuste del modelo es singular, es decir, si no se puede estimar una o más de las varianzas de los efectos aleatorios, se imprime un mensaje informando de este problema.
+#' 
+#' @author juanprimate
+#' @export
+#' @import lme4 isSingular lmer
+safe_lmerBroad <- function(formula, data, REML = TRUE, na.action = na.omit) {
+  model <- suppressMessages(suppressWarnings(
+    lme4::lmer(formula, data = data, REML = TRUE, na.action = na.omit)
+  ))
+  # Verificar singularidad y mostrar mensaje si es necesario
+  if (lme4::isSingular(model)) {
+    print(c(
+      "Boundary (singular) fit detected: see help('isSingular') for details.",
+      "One or more models are singular. Results may not be valid."))
+  }  
+  return(model)
+}
