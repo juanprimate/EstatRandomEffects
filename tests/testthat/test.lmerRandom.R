@@ -1501,4 +1501,3 @@ test_that("efeito-verossimilhanca26.1", {
 	expect_equal(class(output),"list", tolerance = 1e-06,
 	ignore_attr = FALSE)
 })
-
