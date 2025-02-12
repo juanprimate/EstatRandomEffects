@@ -402,7 +402,7 @@ test_that("efeito-verossimilhanca5", {
 })
 
 test_that("efeito-verossimilhanca6", {
-	resistors7 <- structure(list(id = 1:60, part = structure(c(1L, 1L, 1L, 1L,
+	resistors <- structure(list(id = 1:60, part = structure(c(1L, 1L, 1L, 1L,
 		1L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 3L, 3L, 3L, 3L, 3L, 3L, 4L, 4L,
 		4L, 4L, 4L, 4L, 5L, 5L, 5L, 5L, 5L, 5L, 6L, 6L, 6L, 6L, 6L, 6L,
 		7L, 7L, 7L, 7L, 7L, 7L, 8L, 8L, 8L, 8L, 8L, 8L, 9L, 9L, 9L, 9L,
@@ -435,7 +435,7 @@ test_that("efeito-verossimilhanca6", {
 })
 
 test_that("efeito-verossimilhanca7", {
-	dataset <- structure(list(part = structure(c(1L, 1L, 1L, 1L, 1L, 1L, 2L,
+  resistors <- structure(list(part = structure(c(1L, 1L, 1L, 1L, 1L, 1L, 2L,
 		2L, 2L, 2L, 2L, 2L, 3L, 3L, 3L, 3L, 3L, 3L, 4L, 4L, 4L, 4L, 4L,
 		4L, 5L, 5L, 5L, 5L, 5L, 5L, 6L, 6L, 6L, 6L, 6L, 6L, 7L, 7L, 7L,
 		7L, 7L, 7L, 8L, 8L, 8L, 8L, 8L, 8L, 9L, 9L, 9L, 9L, 9L, 9L, 10L,
@@ -453,7 +453,7 @@ test_that("efeito-verossimilhanca7", {
 		412L, 387L, 412L, 408L, 401L, 405L, 410L, 386L, 418L, 404L, 407L,
 		404L)), class = "data.frame", row.names = c(NA, -60L))
 
-	# dataset <- resistors
+	dataset <- resistors
 	varY <- 'mohms'
 	formula <- formulaRandom(dataset,varY)
 	## formula<-mohms~1 + (1|part) + (1|oper) + (1|part:oper)
@@ -817,7 +817,7 @@ test_that("efeito-verossimilhanca14", {
 	covarianceMatrixFit<-covarianceMatrix(fit)
 	# randFitAnovaFit<-randFitAnova(fit)
 	L <- diag(length(lme4::fixef(fit)))[1, ]
-	fit2<-lmerTest::as_lmerModLmerTest(fit)
+	#fit2<-lmerTest::as_lmerModLmerTest(fit)
 	# erer<-lmerTest:::contest.lmerMod(fit, L=1, joint=FALSE, confint = TRUE)
 
 	# yy<-suppressWarnings(lmerTest::contest(fit, L, joint=FALSE, confint = T))
@@ -825,7 +825,7 @@ test_that("efeito-verossimilhanca14", {
 	# contest(fit, L=1, joint=FALSE, confint = TRUE)
 	# erer<-lmerTest:::contest.lmerMod(fit, L=1, joint=FALSE, confint = TRUE)
 
-	yy<-lmerTest::contest(fit2, L=1, joint=FALSE, confint = TRUE)
+	#yy<-lmerTest::contest(fit2, L=1, joint=FALSE, confint = TRUE)
 
 	contestFitResp<-contestFit(dataset,varY,formula,REML)
 	# contest1DFitResp<-contest1DFit(fit)
@@ -877,10 +877,10 @@ test_that("efeito-verossimilhanca15", {
 	fit<-lmerRandomFit(dataset,varY,formula,REML)
 	covarianceMatrixFit<-covarianceMatrix(fit)
 
-	L <- diag(length(fixef(fit)))[1, ]
-	fit2<-lmerTest::as_lmerModLmerTest(fit)
+	#L <- diag(length(fixef(fit)))[1, ]
+	#fit2<-lmerTest::as_lmerModLmerTest(fit)
 
-	yy<-lmerTest::contest(fit2, L=1, joint=FALSE, confint = TRUE)
+	#yy<-lmerTest::contest(fit2, L=1, joint=FALSE, confint = TRUE)
 
 	contestFitResp<-contestFit(dataset,varY,formula,REML)
 
@@ -1501,3 +1501,4 @@ test_that("efeito-verossimilhanca26.1", {
 	expect_equal(class(output),"list", tolerance = 1e-06,
 	ignore_attr = FALSE)
 })
+
